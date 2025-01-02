@@ -70,7 +70,7 @@ import AvatarPage from "./pages/component/AvatarPage";
 import TooltipPage from "./pages/component/TooltipPage";
 import AccordionPage from "./pages/component/AccordionPage";
 import IconsPage from "./pages/component/IconsPage";
-import BleDevices from "./pages/Ble";
+import BleDevices from "./pages/applications/Ble";
 import BleDataPage from "./partials/BleButtons/BleDataPage";
 import { StoreProvider } from "./store/store";
 
@@ -90,7 +90,7 @@ function App() {
           <Route exact path="/" element={<Dashboard />} />
           <Route path="/dashboard/analytics" element={<Analytics />} />
           <Route path="/dashboard/fintech" element={<Fintech />} />
-          <Route path="/dashboard/ble" element={<BleDevices />} />
+          <Route path="/applications/ble" element={<BleDevices />} />
           <Route path="/data-page" element={<BleDataPage />} />
           <Route path="/ecommerce/customers" element={<Customers />} />
           <Route path="/ecommerce/orders" element={<Orders />} />
