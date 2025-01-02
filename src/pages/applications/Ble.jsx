@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import BleButtons from "../partials/BleButtons/BleButtons";
-import { getAllData } from "../store/indexedDB";
-import { useStore } from "../store/store";
-import Sidebar from "../partials/Sidebar";
-import Header from "../partials/Header";
+import BleButtons from "../../partials/BleButtons/BleButtons";
+import { getAllData } from "../../store/indexedDB";
+import { useStore } from "../../store/store";
+import Sidebar from "../../partials/Sidebar";
+import Header from "../../partials/Header";
 
 const BleDevices = () => {
   const { state, dispatch } = useStore();
