@@ -21,6 +21,7 @@ import {
 import PopupNotification from "../notification/PopUp";
 import { ProgressBar } from "../../components/reusableCards/progresBar";
 import Transition from "../../utils/Transition";
+import BleTableItem from "./BleTable";
 
 const BleButtons = () => {
   const { dispatch, state } = useStore();
@@ -873,57 +874,63 @@ const BleButtons = () => {
                   </div>
                 </Transition>
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                className="text-gray-600 border-gray-300 bg-white dark:bg-gray-800"
-                onClick={startQrCodeScan}
-                aria-label="Scan QR Code"
-              >
-                <Camera className="h-4 w-4" />
-              </Button>
             </div>
           </div>
-          <div className="w-full max-w-9xl xs:max-w-9xl sm:max-w-9xl md:max-w-9xl relative h-screen xs:max-h-screen sm:max-h-screen md:max-h-screen lg:max-h-screen">
-            {sortedAndFilteredDevices.length > 0 ? (
-              <ul className="text-left">
-                {sortedAndFilteredDevices.map((device) => (
-                  <li
-                    key={device.macAddress}
-                    className="p-2 w-full max-w-9xl xs:max-w-9xl sm:max-w-9xl md:max-w-9xl border rounded-md shadow flex items-center justify-between"
-                  >
-                    <div>
-                      <p className="text-gray-700 font-bold">
-                        {device.name || "Unknown Device"}
-                      </p>
-                      <p className="text-gray-500 font-normal">
-                        {device.macAddress.toLowerCase()}
-                      </p>
-                      <p className="flex items-left font-light text-gray-400">
-                        {device.rssi}dBm
-                      </p>
-                    </div>
-                    <button
-                      onClick={(e) =>
-                        handleConnectAndInit(e, device.macAddress)
-                      }
-                      className={`px-4 py-2 border rounded-md ml-4 transition-colors duration-300 bg-gray-900 text-gray-100 hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-800 dark:hover:bg-white ${
-                        loadingMap.get(device.macAddress)
-                          ? "bg-gray-600 text-white cursor-not-allowed animate-pulse"
-                          : "btn bg-gray-900 text-gray-100 hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-800 dark:hover:bg-white"
-                      }`}
-                      disabled={loadingMap.get(device.macAddress)}
-                    >
-                      {loadingMap.get(device.macAddress)
-                        ? "Processing..."
-                        : "Connect"}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500">No BLE devices detected.</p>
-            )}
+
+          <div className="bg-white dark:bg-gray-800 shadow-sm rounded-xl relative">
+            <header className="px-5 py-4">
+              <h2 className="font-semibold text-gray-800 dark:text-gray-100">
+                All Devices
+              </h2>
+            </header>
+            <div>
+              <div className="overflow-x-auto">
+                <table className="table-auto w-full dark:text-gray-300">
+                  <thead className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20 border-t border-b border-gray-100 dark:border-gray-700/60">
+                    <tr>
+                      <th className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
+                        <div className="font-semibold text-left">
+                          Device Info
+                        </div>
+                      </th>
+                      <th className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
+                        <div className="font-semibold text-left">
+                          Signal Strength (dBM)
+                        </div>
+                      </th>
+                      <th className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="text-gray-600 border-gray-300 bg-white dark:bg-gray-800"
+                          onClick={startQrCodeScan}
+                          aria-label="Scan QR Code"
+                        >
+                          <Camera className="h-4 w-4" />
+                        </Button>
+                        {/* <div className="font-semibold text-left">Actions</div> */}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm">
+                    {sortedAndFilteredDevices.map((device) => (
+                      <BleTableItem
+                        key={device.macAddress}
+                        id={device.macAddress}
+                        name={device.name}
+                        macAddress={device.macAddress.toLowerCase()}
+                        rssi={`${device.rssi}`}
+                        image="./images/logo-white.png"
+                        isLoading={loadingMap.get(device.macAddress)}
+                        onConnect={(e) =>
+                          handleConnectAndInit(e, device.macAddress)
+                        }
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>

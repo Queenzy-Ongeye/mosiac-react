@@ -1,9 +1,11 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Info, Send, ArrowLeft } from "lucide-react";
-import { useStore } from "../../store/store"
+import { useStore } from "../../store/store";
 import { toast } from "react-toastify";
 import { Button } from "../../components/reusableCards/Buttons";
+import Sidebar from '../../partials/Sidebar';
+import Header from '../../partials/Header';
 import {
   Table,
   TableBody,
@@ -12,6 +14,12 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/reusableCards/table";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "../../components/reusableCards/accordion";
 import {
   Dialog,
   DialogContent,
@@ -25,9 +33,8 @@ const BleDataPage = React.memo(() => {
   const { state } = useStore();
   const deviceData = state?.initBleData?.dataList || [];
   const navigate = useNavigate();
-
-  const [activeCategory, setActiveCategory] = useState("STS");
   const [loading, setLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const categorizedData = useMemo(() => {
     const categories = {
@@ -51,10 +58,6 @@ const BleDataPage = React.memo(() => {
 
     return categories;
   }, [deviceData]);
-
-  const availableCategories = Object.keys(categorizedData).filter(
-    (category) => categorizedData[category].length > 0
-  );
 
   const handleGoBack = useCallback(() => {
     navigate("/home", { replace: true });
@@ -80,7 +83,7 @@ const BleDataPage = React.memo(() => {
         window.WebViewJavascriptBridge.callHandler(
           "mqttPublishMsg",
           dataToPublish,
-          (responseData) => {
+          () => {
             setLoading(false);
             toast.success("Message published successfully", {
               position: "top-right",
@@ -136,51 +139,37 @@ const BleDataPage = React.memo(() => {
     </Dialog>
   );
 
-  return (
-    <div className="container mx-auto py-4">
-      <div className="mb-2 flex mt-12">
-        <Button onClick={handleGoBack} variant="outline" size="sm">
-          <ArrowLeft className="mr-2 h-4 w-4 bg-oves-blue text-white" />
-        </Button>
-        <h1 className="text-3xl font-bold mb-6">Device Data</h1>
-      </div>
-
-      <Button
-        onClick={() => publishMqttMessage(activeCategory)}
-        disabled={loading}
-        className="mb-4 bg-oves-blue text-white"
-      >
-        <Send className="mr-2 h-4 w-4" />
-        {loading ? "Publishing..." : `Publish ${activeCategory} Data`}
-      </Button>
-
-      <div className="flex mb-6 space-x-2">
-        {availableCategories.map((category) => (
-          <button
-            key={category}
-            onClick={() => setActiveCategory(category)}
-            className={`inline-flex items-center justify-center text-sm font-medium leading-5 rounded-full px-3 py-1 border border-transparent shadow-sm bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-800 transition ${
-              activeCategory === category
-                ? "inline-flex items-center justify-center text-sm font-medium leading-5 rounded-full px-3 py-1 border border-transparent shadow-sm bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-800 transition"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
+  const CategoryAccordion = ({ category, data }) => (
+    <AccordionItem
+      title="Accordion Title"
+      value={category}
+      className="border rounded-lg mb-4 p-4"
+    >
+      <AccordionTrigger className="flex items-center justify-between w-full">
+        <div className="flex items-center space-x-4">
+          <h3 className="text-xl font-semibold">{category}</h3>
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              publishMqttMessage(category);
+            }}
+            disabled={loading}
+            className="bg-oves-blue text-white"
+            size="sm"
           >
-            {category}
-          </button>
-        ))}
-      </div>
-
-      {categorizedData[activeCategory]?.length > 0 ? (
-        categorizedData[activeCategory].map((serviceData) => (
-          <div key={serviceData.uuid} className="mb-8">
-            <div className="flex justify-between items-start mb-4">
-              <h2 className="text-lg font-bold">
-                {serviceData.serviceNameEnum
-                  ? serviceData.serviceNameEnum.replace(/_/g, " ")
-                  : "Unnamed Service"}
-              </h2>
-            </div>
-
+            <Send className="mr-2 h-4 w-4" />
+            {loading ? "Publishing..." : "Publish"}
+          </Button>
+        </div>
+      </AccordionTrigger>
+      <AccordionContent>
+        {data.map((serviceData) => (
+          <div key={serviceData.uuid} className="mt-4">
+            <h4 className="text-lg font-semibold mb-2">
+              {serviceData.serviceNameEnum
+                ? serviceData.serviceNameEnum.replace(/_/g, " ")
+                : "Unnamed Service"}
+            </h4>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -212,7 +201,7 @@ const BleDataPage = React.memo(() => {
                       </TableCell>
                       <TableCell className="py-2">
                         <div className="flex items-center space-x-2">
-                          {activeCategory === "CMD" && (
+                          {category === "CMD" && (
                             <WriteCharacteristicDialog
                               characteristic={characteristic}
                               serviceUuid={serviceData.uuid}
@@ -236,21 +225,53 @@ const BleDataPage = React.memo(() => {
               </TableBody>
             </Table>
           </div>
-        ))
-      ) : (
-        <div>No data available for this category</div>
-      )}
+        ))}
+      </AccordionContent>
+    </AccordionItem>
+  );
 
-      <Button
-        variant="outline"
-        size="icon"
-        className="fixed bottom-4 right-4 rounded-full bg-oves-blue"
-        onClick={() =>
-          alert("Device data categories and their characteristics")
-        }
-      >
-        <Info className="h-4 w-4" />
-      </Button>
+  return (
+    <div className="flex h-[100dvh] overflow-hidden">
+      {/* Sidebar */}
+      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+
+      {/* Content area */}
+      <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+        {/*  Site header */}
+        <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <main className="grow">
+          <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
+            {/* Left: Title */}
+            <div className="mb-4 sm:mb-0">
+                <h1 className="text-2xl md:text-3xl text-gray-800 dark:text-gray-100 font-bold">Device Data</h1>
+              </div>
+
+            <Accordion type="single" collapsible className="w-full">
+              {Object.entries(categorizedData).map(([category, data]) => {
+                if (data.length === 0) return null;
+                return (
+                  <CategoryAccordion
+                    key={category}
+                    category={category}
+                    data={data}
+                  />
+                );
+              })}
+            </Accordion>
+
+            <Button
+              variant="outline"
+              size="icon"
+              className="fixed bottom-4 right-4 rounded-full bg-oves-blue"
+              onClick={() =>
+                alert("Device data categories and their characteristics")
+              }
+            >
+              <Info className="h-4 w-4" />
+            </Button>
+          </div>
+        </main>
+      </div>
     </div>
   );
 });
